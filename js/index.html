@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Complaints</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>User Complaints</h1>
+        <div id="user-list" class="user-list"></div>
+    </div>
+
+    <script>
+        // Simulating the dynamic data fetching (Replace with actual data fetching from backend)
+        const userData = [
+            {
+                userId: "qwuCvbAmCUUEpPyPf8kIrhwdxpv1",
+                userName: "John Doe",
+                userEmail: "john@example.com",
+                complaints: [
+                    { complaintId: "jmm3YLliTTEiGxsfa3Pw", title: "Complaint Title 1", description: "Description 1", status: "Open" },
+                    { complaintId: "mLm8AzcdhRskfsfJ94kf", title: "Complaint Title 2", description: "Description 2", status: "Resolved" }
+                ]
+            },
+            {
+                userId: "abcdXYZp8nklrP12sd",
+                userName: "Jane Smith",
+                userEmail: "jane@example.com",
+                complaints: [
+                    { complaintId: "wPoIU32FGnh47JkDSAd3", title: "Another Complaint", description: "Details here", status: "Pending" }
+                ]
+            }
+        ];
+
+        // Function to render user and complaint data
+        function renderUserData() {
+            const userListContainer = document.getElementById('user-list');
+            userListContainer.innerHTML = ''; // Clear previous content
+
+            userData.forEach(user => {
+                const userCard = document.createElement('div');
+                userCard.classList.add('user-card');
+
+                const userDetails = document.createElement('div');
+                userDetails.classList.add('user-details');
+                userDetails.innerHTML = `
+                    <h2>${user.userName}</h2>
+                    <p><strong>Email:</strong> ${user.userEmail}</p>
+                `;
+                userCard.appendChild(userDetails);
+
+                const complaintsContainer = document.createElement('div');
+                complaintsContainer.classList.add('complaints-container');
+
+                user.complaints.forEach(complaint => {
+                    const complaintCard = document.createElement('div');
+                    complaintCard.classList.add('complaint-card');
+                    complaintCard.innerHTML = `
+                        <h3>${complaint.title}</h3>
+                        <p><strong>ID:</strong> ${complaint.complaintId}</p>
+                        <p><strong>Description:</strong> ${complaint.description}</p>
+                        <p><strong>Status:</strong> ${complaint.status}</p>
+                    `;
+                    complaintsContainer.appendChild(complaintCard);
+                });
+
+                userCard.appendChild(complaintsContainer);
+                userListContainer.appendChild(userCard);
+            });
+        }
+
+        // Call the function to render data
+        renderUserData();
+    </script>
+</body>
+</html>
