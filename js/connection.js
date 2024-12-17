@@ -1,60 +1,79 @@
-const admin = require("firebase-admin");
-const serviceAccount = require("./serviceAccount.json");
+const express = require('express');
+const admin = require('firebase-admin');
+const serviceAccount = require('./serviceAccount.json');
 
 // Initialize Firebase Admin SDK
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-console.log("Firebase Admin SDK initialized successfully.");
-
-// Reference to Firestore
 const db = admin.firestore();
+const app = express();
+const port = 3000;
 
-// Function to fetch complaints and user details dynamically for all users
+// Function to fetch all complaints and user details
 async function fetchAllComplaints() {
   try {
-    // Step 1: Fetch all user documents
-    const usersSnapshot = await db.collection("users").get();
+    // Fetch all user documents
+    const usersSnapshot = await db.collection('users').get();
+    let allData = [];
 
     if (usersSnapshot.empty) {
-      console.log("No users found.");
-      return;
+      console.log('No users found.');
+      return [];
     }
 
-    console.log("Fetching complaints for all users...\n");
-
-    // Step 2: Iterate through each user document
+    // Iterate through each user document
     for (const userDoc of usersSnapshot.docs) {
       const userId = userDoc.id;
       const userData = userDoc.data(); // Fetch user details
-      console.log(`User ID: ${userId}`);
-      console.log("User Data:", userData); // Log user details
 
-      // Step 3: Reference the "complaints" subcollection for each user
-      const complaintsRef = db
-        .collection("users")
-        .doc(userId)
-        .collection("complaints");
+      // Reference the "complaints" subcollection for each user
+      const complaintsRef = db.collection('users').doc(userId).collection('complaints');
       const complaintsSnapshot = await complaintsRef.get();
 
-      if (complaintsSnapshot.empty) {
-        console.log("  No complaints found for this user.\n");
-        continue;
+      if (!complaintsSnapshot.empty) {
+        // Store user and complaint data
+        complaintsSnapshot.forEach((complaintDoc) => {
+          allData.push({
+            userId,
+            userData,
+            complaintId: complaintDoc.id,
+            complaintData: complaintDoc.data(),
+          });
+        });
       }
-
-      // Step 4: Iterate through all complaint documents
-      complaintsSnapshot.forEach((complaintDoc) => {
-        console.log(`  Complaint ID: ${complaintDoc.id}`);
-        console.log("  Data:", complaintDoc.data(), "\n");
-      });
-
-      console.log("------------------------------------\n");
     }
+
+    return allData;
   } catch (error) {
-    console.error("Error fetching complaints:", error);
+    console.error('Error fetching complaints:', error);
+    return [];
   }
 }
 
-// Run the function
-fetchAllComplaints();
+// Route to display complaints on the webpage
+app.get('/', async (req, res) => {
+  const complaintsData = await fetchAllComplaints();
+  
+  if (complaintsData.length === 0) {
+    res.send('<h1>No complaints found.</h1>');
+  } else {
+    let htmlContent = '<h1>Complaints Data</h1>';
+    complaintsData.forEach((data) => {
+      htmlContent += `
+        <h2>User ID: ${data.userId}</h2>
+        <p>User Data: ${JSON.stringify(data.userData)}</p>
+        <h3>Complaint ID: ${data.complaintId}</h3>
+        <p>Complaint Data: ${JSON.stringify(data.complaintData)}</p>
+        <hr>
+      `;
+    });
+    res.send(htmlContent);
+  }
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});
